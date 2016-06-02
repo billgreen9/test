@@ -43,10 +43,10 @@ public class RedisUtil {
 		config.setMaxIdle(5);
 		config.setTestOnBorrow(false);
 		List<JedisShardInfo> shards = new ArrayList<JedisShardInfo>();
-		for (String item : addr) {
-			String ip = item.split(",")[0];
-			String port = item.split(",")[0];
-			shards.add(new JedisShardInfo(ip, Integer.parseInt(port)));
+		for (String uri : addr) {
+			// String ip = item.split(",")[0];
+			// String port = item.split(",")[0];
+			shards.add(new JedisShardInfo(uri));
 		}
 		// 构造池
 		shardedJedisPool = new ShardedJedisPool(config, shards);
@@ -92,8 +92,22 @@ public class RedisUtil {
 	public static void main(String[] args) {
 		RedisUtil cli = new RedisUtil();
 		List<String> addr = new ArrayList<>();
-		
-		cli.getShardedJedisPool(addr)
+		addr.add("tcp://10.10.22.140:6379/1");// /tcp://10.10.22.140:6379/1
+		addr.add("tcp://10.10.22.140:6385/1");
+		addr.add("tcp://10.10.22.140:6386/1");
+		addr.add("tcp://10.10.22.140:6387/1");
+		ShardedJedisPool pool = cli.getShardedJedisPool(addr);
+		ShardedJedis jedis = pool.getResource();
+		int start = 10001;
+		int end = start+100;
+		for (int i = start; i < end; i++) {
+			String key = "key" + i;
+			jedis.set(key, "value" + i);
+			System.out.println(jedis.getShardInfo(key).toString());
+		}
+		jedis.close();
+		pool.close();
+		System.out.println("结束！");
 	}
 
 }
